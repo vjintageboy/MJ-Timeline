@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Theme } from "@radix-ui/themes"
 import { networkConfig } from "@/lib/config"
 import { ReactNode } from "react"
+import { ThemeProvider } from "./ThemeProvider"
 
 const queryClient = new QueryClient()
 
@@ -16,13 +17,15 @@ interface ProvidersProps {
 
 export function Provider({ children }: ProvidersProps) {
   return (
-    <Theme appearance="dark">
+    <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <IotaClientProvider networks={networkConfig} defaultNetwork="devnet">
-          <WalletProvider autoConnect>{children}</WalletProvider>
+          <WalletProvider autoConnect>
+            <Theme appearance="dark">{children}</Theme>
+          </WalletProvider>
         </IotaClientProvider>
       </QueryClientProvider>
-    </Theme>
+    </ThemeProvider>
   )
 }
 

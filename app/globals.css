@@ -5,6 +5,50 @@
   --foreground: #171717;
 }
 
+/* Dark theme variables */
+[data-theme="dark"] {
+  --page-background: linear-gradient(180deg, #0a0a12 0%, #12121f 50%, #0a0a12 100%);
+  --header-background: rgba(10, 10, 18, 0.8);
+  --card-background: linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
+  --card-border: rgba(100, 100, 255, 0.15);
+  --border-color: rgba(100, 100, 255, 0.2);
+  --text-primary: rgba(240, 240, 255, 0.95);
+  --text-secondary: rgba(160, 160, 180, 0.8);
+  --text-muted: rgba(120, 120, 140, 0.6);
+  --button-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --badge-gradient: linear-gradient(90deg, #6366f1, #8b5cf6);
+  --author-badge-gradient: linear-gradient(90deg, #f59e0b, #ef4444);
+  --input-background: rgba(30, 30, 40, 0.6);
+  --error-background: rgba(220, 50, 50, 0.08);
+  --error-border: rgba(220, 50, 50, 0.25);
+  --error-text: rgba(255, 120, 120, 0.9);
+  --deleted-background: rgba(40, 20, 20, 0.3);
+  --deleted-border: rgba(100, 50, 50, 0.15);
+  --deleted-text: rgba(180, 100, 100, 0.8);
+}
+
+/* Light theme variables */
+[data-theme="light"] {
+  --page-background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+  --header-background: rgba(255, 255, 255, 0.9);
+  --card-background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  --card-border: rgba(100, 100, 255, 0.2);
+  --border-color: rgba(100, 100, 200, 0.3);
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8a8a9a;
+  --button-gradient: linear-gradient(135deg, #5558f1, #7b4cf6);
+  --badge-gradient: linear-gradient(90deg, #5558f1, #7b4cf6);
+  --author-badge-gradient: linear-gradient(90deg, #f59e0b, #ef4444);
+  --input-background: #ffffff;
+  --error-background: rgba(220, 50, 50, 0.1);
+  --error-border: rgba(220, 50, 50, 0.3);
+  --error-text: #dc3545;
+  --deleted-background: rgba(200, 200, 200, 0.3);
+  --deleted-border: rgba(150, 150, 150, 0.3);
+  --deleted-text: #6c757d;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

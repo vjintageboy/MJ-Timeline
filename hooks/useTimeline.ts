@@ -22,9 +22,20 @@ const POLL_INTERVAL_MS = 4000
 // Timeline Object ID - will be set after first timeline creation
 // For now we'll store it in localStorage and URL hash
 const TIMELINE_STORAGE_KEY = "mjtimeline_timeline_id"
+const POST_LIKES_STORAGE_KEY = "mjtimeline_post_likes_id"
+const POST_COMMENTS_STORAGE_KEY = "mjtimeline_post_comments_id"
 
 export interface Post {
     id: number
+    author: string
+    content: string
+    timestamp: number
+    likes: number
+    comment_count: number
+    is_deleted: boolean
+}
+
+export interface Comment {
     author: string
     content: string
     timestamp: number
@@ -44,19 +55,25 @@ export const useTimeline = () => {
     const { mutate: signAndExecute, isPending } = useSignAndExecuteTransaction()
 
     const [timelineId, setTimelineId] = useState<string | null>(null)
+    const [postLikesId, setPostLikesId] = useState<string | null>(null)
+    const [postCommentsId, setPostCommentsId] = useState<string | null>(null)
     const [posts, setPosts] = useState<Post[]>([])
+    const [comments, setComments] = useState<{ [postId: number]: Comment[] }>({})
+    const [userLikes, setUserLikes] = useState<Set<number>>(new Set())
     const [isLoading, setIsLoading] = useState(false)
     const [isFetchingPosts, setIsFetchingPosts] = useState(false)
     const [hash, setHash] = useState<string | undefined>()
     const [error, setError] = useState<Error | null>(null)
 
-    // Load timeline ID from localStorage on mount (not using URL hash to keep URL clean)
+    // Load timeline ID and auxiliary objects from localStorage on mount
     useEffect(() => {
         if (typeof window !== "undefined") {
             const storedId = localStorage.getItem(TIMELINE_STORAGE_KEY)
-            if (storedId) {
-                setTimelineId(storedId)
-            }
+            const storedLikesId = localStorage.getItem(POST_LIKES_STORAGE_KEY)
+            const storedCommentsId = localStorage.getItem(POST_COMMENTS_STORAGE_KEY)
+            if (storedId) setTimelineId(storedId)
+            if (storedLikesId) setPostLikesId(storedLikesId)
+            if (storedCommentsId) setPostCommentsId(storedCommentsId)
         }
     }, [])
 
@@ -138,6 +155,9 @@ export const useTimeline = () => {
                                     author: actualData.author,
                                     content: actualData.content,
                                     timestamp: parseInt(actualData.timestamp || "0", 10),
+                                    likes: parseInt(actualData.likes || "0", 10),
+                                    comment_count: parseInt(actualData.comment_count || "0", 10),
+                                    is_deleted: actualData.is_deleted || false,
                                 }
                                 console.log("✨ Adding post to array:", newPost)
                                 fetchedPosts.push(newPost)
@@ -231,7 +251,25 @@ export const useTimeline = () => {
                                 setTimelineId(newTimelineId)
                                 if (typeof window !== "undefined") {
                                     localStorage.setItem(TIMELINE_STORAGE_KEY, newTimelineId)
-                                    // Don't update URL hash to keep URL clean
+                                }
+                            }
+
+                            // Find PostLikes and PostComments shared objects
+                            const sharedObjects = effects?.created?.filter(
+                                (obj) => obj.owner && typeof obj.owner === "object" && "Shared" in obj.owner
+                            )
+
+                            if (sharedObjects && sharedObjects.length >= 3) {
+                                // The order should be Timeline, PostLikes, PostComments based on contract
+                                const likesId = sharedObjects[1].reference.objectId
+                                const commentsId = sharedObjects[2].reference.objectId
+                                
+                                setPostLikesId(likesId)
+                                setPostCommentsId(commentsId)
+                                
+                                if (typeof window !== "undefined") {
+                                    localStorage.setItem(POST_LIKES_STORAGE_KEY, likesId)
+                                    localStorage.setItem(POST_COMMENTS_STORAGE_KEY, commentsId)
                                 }
                             }
                         } catch (waitErr) {
@@ -309,10 +347,195 @@ export const useTimeline = () => {
     // Clear timeline (for testing/reset)
     const clearTimeline = () => {
         setTimelineId(null)
+        setPostLikesId(null)
+        setPostCommentsId(null)
         setPosts([])
+        setComments({})
+        setUserLikes(new Set())
         if (typeof window !== "undefined") {
             localStorage.removeItem(TIMELINE_STORAGE_KEY)
-            // URL hash removed - keep URL clean
+            localStorage.removeItem(POST_LIKES_STORAGE_KEY)
+            localStorage.removeItem(POST_COMMENTS_STORAGE_KEY)
+        }
+    }
+
+    // Like a post
+    const likePost = async (postId: number) => {
+        if (!packageId || !timelineId || !postLikesId) {
+            setError(new Error("Timeline not initialized"))
+            return
+        }
+
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const tx = new Transaction()
+            tx.moveCall({
+                target: `${packageId}::${MODULE_NAME}::like_post`,
+                arguments: [
+                    tx.object(timelineId),
+                    tx.object(postLikesId),
+                    tx.pure.u64(postId),
+                ],
+            })
+
+            signAndExecute(
+                { transaction: tx },
+                {
+                    onSuccess: async ({ digest }) => {
+                        await iotaClient.waitForTransaction({ digest })
+                        await new Promise(resolve => setTimeout(resolve, 500))
+                        await fetchPosts()
+                        setUserLikes(prev => new Set([...prev, postId]))
+                        setIsLoading(false)
+                    },
+                    onError: (err) => {
+                        setError(err instanceof Error ? err : new Error(String(err)))
+                        setIsLoading(false)
+                    },
+                }
+            )
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)))
+            setIsLoading(false)
+        }
+    }
+
+    // Unlike a post
+    const unlikePost = async (postId: number) => {
+        if (!packageId || !timelineId || !postLikesId) {
+            setError(new Error("Timeline not initialized"))
+            return
+        }
+
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const tx = new Transaction()
+            tx.moveCall({
+                target: `${packageId}::${MODULE_NAME}::unlike_post`,
+                arguments: [
+                    tx.object(timelineId),
+                    tx.object(postLikesId),
+                    tx.pure.u64(postId),
+                ],
+            })
+
+            signAndExecute(
+                { transaction: tx },
+                {
+                    onSuccess: async ({ digest }) => {
+                        await iotaClient.waitForTransaction({ digest })
+                        await new Promise(resolve => setTimeout(resolve, 500))
+                        await fetchPosts()
+                        setUserLikes(prev => {
+                            const newSet = new Set(prev)
+                            newSet.delete(postId)
+                            return newSet
+                        })
+                        setIsLoading(false)
+                    },
+                    onError: (err) => {
+                        setError(err instanceof Error ? err : new Error(String(err)))
+                        setIsLoading(false)
+                    },
+                }
+            )
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)))
+            setIsLoading(false)
+        }
+    }
+
+    // Add comment to a post
+    const addComment = async (postId: number, content: string) => {
+        if (!packageId || !timelineId || !postCommentsId) {
+            setError(new Error("Timeline not initialized"))
+            return
+        }
+
+        if (!content.trim()) {
+            setError(new Error("Comment cannot be empty"))
+            return
+        }
+
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const tx = new Transaction()
+            tx.moveCall({
+                target: `${packageId}::${MODULE_NAME}::add_comment`,
+                arguments: [
+                    tx.object(timelineId),
+                    tx.object(postCommentsId),
+                    tx.pure.u64(postId),
+                    tx.pure.string(content),
+                    tx.object(CLOCK_OBJECT_ID),
+                ],
+            })
+
+            signAndExecute(
+                { transaction: tx },
+                {
+                    onSuccess: async ({ digest }) => {
+                        await iotaClient.waitForTransaction({ digest })
+                        await new Promise(resolve => setTimeout(resolve, 500))
+                        await fetchPosts()
+                        setIsLoading(false)
+                    },
+                    onError: (err) => {
+                        setError(err instanceof Error ? err : new Error(String(err)))
+                        setIsLoading(false)
+                    },
+                }
+            )
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)))
+            setIsLoading(false)
+        }
+    }
+
+    // Delete a post
+    const deletePost = async (postId: number) => {
+        if (!packageId || !timelineId) {
+            setError(new Error("Timeline not initialized"))
+            return
+        }
+
+        try {
+            setIsLoading(true)
+            setError(null)
+
+            const tx = new Transaction()
+            tx.moveCall({
+                target: `${packageId}::${MODULE_NAME}::delete_post`,
+                arguments: [
+                    tx.object(timelineId),
+                    tx.pure.u64(postId),
+                ],
+            })
+
+            signAndExecute(
+                { transaction: tx },
+                {
+                    onSuccess: async ({ digest }) => {
+                        await iotaClient.waitForTransaction({ digest })
+                        await new Promise(resolve => setTimeout(resolve, 500))
+                        await fetchPosts()
+                        setIsLoading(false)
+                    },
+                    onError: (err) => {
+                        setError(err instanceof Error ? err : new Error(String(err)))
+                        setIsLoading(false)
+                    },
+                }
+            )
+        } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)))
+            setIsLoading(false)
         }
     }
 
@@ -325,15 +548,24 @@ export const useTimeline = () => {
 
     return {
         timelineId,
+        postLikesId,
+        postCommentsId,
         posts,
+        comments,
+        userLikes,
         isFetchingPosts,
         state,
         isConnected: !!currentAccount,
+        currentAccount: currentAccount?.address,
         actions: {
             createTimeline,
             createPost,
             fetchPosts,
             clearTimeline,
+            likePost,
+            unlikePost,
+            addComment,
+            deletePost,
         },
     }
 }

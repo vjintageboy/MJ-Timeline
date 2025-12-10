@@ -49,8 +49,8 @@ export function CreatePost() {
         return (
             <Card
                 style={{
-                    background: "linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95))",
-                    border: "1px solid rgba(100, 100, 255, 0.2)",
+                    background: "var(--card-background)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: "20px",
                     padding: "2rem",
                     textAlign: "center",
@@ -61,7 +61,7 @@ export function CreatePost() {
                     style={{
                         display: "block",
                         marginBottom: "1.5rem",
-                        color: "rgba(200, 200, 220, 0.9)",
+                        color: "var(--text-secondary)",
                     }}
                 >
                     Create a new Timeline to start posting
@@ -71,7 +71,7 @@ export function CreatePost() {
                     onClick={actions.createTimeline}
                     disabled={state.isPending}
                     style={{
-                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                        background: "var(--button-gradient)",
                         color: "white",
                         cursor: state.isPending ? "not-allowed" : "pointer",
                         padding: "0.75rem 2rem",
@@ -96,8 +96,8 @@ export function CreatePost() {
     return (
         <Card
             style={{
-                background: "linear-gradient(145deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95))",
-                border: "1px solid rgba(100, 100, 255, 0.2)",
+                background: "var(--card-background)",
+                border: "1px solid var(--border-color)",
                 borderRadius: "20px",
                 padding: "1.5rem",
                 marginBottom: "2rem",
@@ -112,11 +112,11 @@ export function CreatePost() {
                     style={{
                         width: "100%",
                         minHeight: "100px",
-                        background: "rgba(10, 10, 20, 0.6)",
-                        border: "1px solid rgba(100, 100, 255, 0.15)",
+                        background: "var(--input-background)",
+                        border: "1px solid var(--border-color)",
                         borderRadius: "12px",
                         padding: "1rem",
-                        color: "rgba(240, 240, 255, 0.95)",
+                        color: "var(--text-primary)",
                         fontSize: "1rem",
                         resize: "vertical",
                         marginBottom: "1rem",
@@ -124,7 +124,7 @@ export function CreatePost() {
                 />
 
                 <Flex justify="between" align="center">
-                    <Text size="1" style={{ color: "rgba(160, 160, 180, 0.7)" }}>
+                    <Text size="1" style={{ color: "var(--text-secondary)" }}>
                         {content.trim().length}/500 characters
                     </Text>
 
@@ -135,7 +135,7 @@ export function CreatePost() {
                         style={{
                             background: state.isPending || !content.trim()
                                 ? "rgba(100, 100, 120, 0.5)"
-                                : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                : "var(--button-gradient)",
                             color: "white",
                             cursor: state.isPending || !content.trim() ? "not-allowed" : "pointer",
                             padding: "0.6rem 1.5rem",
@@ -161,12 +161,12 @@ export function CreatePost() {
                     style={{
                         marginTop: "1rem",
                         padding: "0.75rem 1rem",
-                        background: "rgba(220, 50, 50, 0.15)",
-                        border: "1px solid rgba(220, 50, 50, 0.3)",
+                        background: "var(--error-background)",
+                        border: "1px solid var(--error-border)",
                         borderRadius: "10px",
                     }}
                 >
-                    <Text size="2" style={{ color: "rgba(255, 100, 100, 0.9)" }}>
+                    <Text size="2" style={{ color: "var(--error-text)" }}>
                         ⚠️ {localError || state.error?.message}
                     </Text>
                 </div>
