@@ -144,3 +144,4 @@ Then copy the generated prompt from `prompts/` folder and paste it to your AI as
 - [Move Language Documentation](https://move-language.github.io/move/)
 
 
+
