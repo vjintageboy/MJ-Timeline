@@ -14,7 +14,7 @@ Decentralized micro-journalism timeline on IOTA blockchain.
 - 🕒 Real-time chronological timeline
 - 🌐 Fully decentralized - no central server
 
-## � Smart Contract
+## Smart Contract
 
 | Network | Package ID |
 |---------|------------|
@@ -22,7 +22,7 @@ Decentralized micro-journalism timeline on IOTA blockchain.
 | Testnet | `Coming soon` |
 | Mainnet | `Coming soon` |
 
-## �🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
@@ -53,7 +53,7 @@ Open [http://localhost:3000](http://localhost:3000)
 └── lib/                # Config & utilities
 ```
 
-## 🛠️ Scripts
+## Scripts
 
 | Command | Description |
 |---------|-------------|
