@@ -143,3 +143,4 @@ Then copy the generated prompt from `prompts/` folder and paste it to your AI as
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Move Language Documentation](https://move-language.github.io/move/)
 
+
